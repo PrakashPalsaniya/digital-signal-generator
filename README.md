@@ -257,13 +257,6 @@ g++ signal_generator.cpp -o signal_generator.exe -lfreeglut -lglu32 -lopengl32 -
 3. Make changes and test thoroughly
 4. Submit a pull request with detailed description
 
-## License
-
-This project is open-source. Please refer to the license file if included.
-
-## Contact
-
-For questions or support, please contact the project maintainer.
 
 ## Version History
 
