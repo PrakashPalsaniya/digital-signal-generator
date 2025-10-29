@@ -68,7 +68,7 @@ void encode_AMI(char* data, int* output, int len) {
 
 // ==================== SCRAMBLING FUNCTIONS ====================
 
-// O(n) time complexity - tracks polarity during forward pass
+
 void apply_B8ZS(int* signal, int len) {
     int last_polarity = 1;
     
@@ -96,7 +96,7 @@ void apply_B8ZS(int* signal, int len) {
     }
 }
 
-// O(n) time complexity - tracks ones count and polarity incrementally
+
 void apply_HDB3(int* signal, int len) {
     int ones_count = 0;
     int last_polarity = 1;
@@ -132,7 +132,7 @@ void apply_HDB3(int* signal, int len) {
 
 // ==================== MODULATION FUNCTIONS ====================
 
-// Converts analog samples to binary using PCM encoding
+
 int pcm_encode(double* analog_signal, int samples, char* output, int bits) {
     double max_val = analog_signal[0], min_val = analog_signal[0];
     for (int i = 1; i < samples; i++) {
@@ -156,7 +156,7 @@ int pcm_encode(double* analog_signal, int samples, char* output, int bits) {
     return output_len;
 }
 
-// Converts analog samples to binary using Delta Modulation
+
 int delta_modulation(double* analog_signal, int samples, char* output) {
     double prediction = 0.0, delta = 0.5;
     for (int i = 0; i < samples; i++) {
@@ -174,7 +174,7 @@ int delta_modulation(double* analog_signal, int samples, char* output) {
 
 // ==================== ANALYTICAL FUNCTIONS ====================
 
-// Finds longest palindromic substring using Manacher's Algorithm - O(n) time
+
 void find_longest_palindrome(char* data, int len) {
     int max_len = 1, start = 0;
     char* transformed = new char[2 * len + 3];
@@ -213,7 +213,9 @@ void find_longest_palindrome(char* data, int len) {
     delete[] P;
 }
 
-// Finds longest consecutive sequence of zeros - O(n) time
+
+
+
 void find_longest_zero_sequence(int* signal, int len) {
     int max_count = 0, current_count = 0, max_start = 0, current_start = 0;
     for (int i = 0; i < len; i++) {
