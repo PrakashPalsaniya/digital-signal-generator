@@ -82,7 +82,51 @@ OpenGL window opened. Close to exit...
 
 text
 
+<<<<<<< HEAD
 ![NRZ-L Output](Output-Images/nrz-l.png)
+=======
+- Maximum input length: 1000 bits (configurable)
+- OpenGL window size fixed at 1200x700
+- Requires graphics hardware support
+- Console input only (no GUI for data entry)
+- Windows-specific executable (may need recompilation for other OS)
+
+## Troubleshooting
+
+### Common Issues
+1. **"freeglut.dll not found"**
+   - Copy `freeglut.dll` to the executable directory or system path
+
+2. **OpenGL window doesn't appear**
+   - Check graphics drivers
+   - Ensure OpenGL support is enabled
+
+3. **Compilation errors**
+   - Verify compiler version and library paths
+   - Check for missing headers
+
+4. **Program crashes on large inputs**
+   - Reduce input size or increase array limits in code
+
+### Debug Mode
+Compile with debug flags for troubleshooting:
+```
+g++ signal_generator.cpp -o signal_generator.exe -lfreeglut -lglu32 -lopengl32 -g
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make changes and test thoroughly
+4. Submit a pull request with detailed description
+
+
+## Version History
+
+- v1.0: Initial release with basic line coding and visualization
+- Future versions may include additional encoding schemes and improved UI
+>>>>>>> bd5cf6c6046a75666c59600481bd2aac547f36da
 
 ---
 
