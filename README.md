@@ -2,7 +2,7 @@
 
 A C++ application for generating and visualizing digital signals using various line coding schemes, scrambling techniques, and modulation methods with OpenGL graphics.
 
-![Demo](Output-Images/demo.png)
+
 
 ## ✨ Features
 
@@ -48,7 +48,7 @@ Or simply double-click `signal_generator.exe` in Windows Explorer.
 
 ### Example 1: NRZ-I Encoding
 
-binary data: 10010101
+Binary Data: 10010101
 
 
 
@@ -59,7 +59,7 @@ binary data: 10010101
 ### Example 2: Differential Manchester
 
 
-binary data: 10101010
+Binary Data: 10101010
 
 
 ![Differential Manchester Output](Output-Images/diffrential-manchester.png)
