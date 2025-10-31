@@ -5,13 +5,13 @@
 
 using namespace std;
 
-// ==================== GLOBAL VARIABLES ====================
+
 int* current_signal = NULL;
 int signal_length = 0;
 char signal_title[100] = "";
 bool is_manchester_encoding = false;
 
-// ==================== LINE CODING FUNCTIONS ====================
+// LINE CODING FUNCTIONS:-
 
 void encode_NRZ_L(char* data, int* output, int len) {
     for (int i = 0; i < len; i++) {
@@ -66,7 +66,7 @@ void encode_AMI(char* data, int* output, int len) {
     }
 }
 
-// ==================== SCRAMBLING FUNCTIONS ====================
+// SCRAMBLING FUNCTIONS:-
 
 
 void apply_B8ZS(int* signal, int len) {
@@ -130,7 +130,7 @@ void apply_HDB3(int* signal, int len) {
     }
 }
 
-// ==================== MODULATION FUNCTIONS ====================
+// MODULATION FUNCTIONS:-
 
 
 int pcm_encode(double* analog_signal, int samples, char* output, int bits) {
@@ -172,7 +172,7 @@ int delta_modulation(double* analog_signal, int samples, char* output) {
     return samples;
 }
 
-// ==================== ANALYTICAL FUNCTIONS ====================
+//ANALYTICAL FUNCTIONS:-
 
 
 void find_longest_palindrome(char* data, int len) {
@@ -237,7 +237,7 @@ void find_longest_zero_sequence(int* signal, int len) {
     }
 }
 
-// ==================== OPENGL DISPLAY FUNCTIONS ====================
+// OPENGL DISPLAY FUNCTIONS :-
 
 void draw_text(float x, float y, const char* text) {
     glRasterPos2f(x, y);
@@ -392,11 +392,11 @@ void display_signal(int* signal, int len, const char* title, bool is_manchester)
     glutPostRedisplay();
 }
 
-// ==================== MAIN PROGRAM ====================
+//MAIN PROGRAM :-
 
 int main(int argc, char** argv) {
     int input_type;
-    cout << "=== Digital Signal Generator ===" << endl;
+    cout << "----: Digital Signal Generator :----" << endl;
     cout << "1. Digital Input\n2. Analog Input (PCM/DM)\nChoice: ";
     cin >> input_type;
     
