@@ -1,13 +1,15 @@
 #include <iostream>
 #include <cstring>
 #include <cmath>
+#include <algorithm>
+#include <cstdio>
 #include "GL/glut.h"
 using namespace std;
 
 // Global variables
-int* signalData = NULL;
-int signalSize = 0;
-char windowTitle[100] = "";
+int* currentSignal = NULL;
+int signalLength = 0;
+char signalTitle[100] = "";
 bool isManchester = false;
 
 // LINE CODING :-
@@ -65,56 +67,77 @@ void encodeAMI(char* bits, int* encoded, int n) {
 }
 
 //SCRAMBLING:-
-
+// --- B8ZS Scrambling ---
 void scrambleB8ZS(int* signal, int n) {
     int lastPolarity = 1;
     for (int i = 0; i <= n - 8; i++) {
-        if (signal[i] != 0) lastPolarity = signal[i];
+        if (signal[i] != 0)
+            lastPolarity = signal[i];
 
+        
         bool allZero = true;
         for (int j = i; j < i + 8; j++) {
             if (signal[j] != 0) { allZero = false; break; }
         }
 
         if (allZero) {
+            
             signal[i+3] = lastPolarity;
             signal[i+4] = -lastPolarity;
-            signal[i+6] = lastPolarity;
-            signal[i+7] = -lastPolarity;
-            lastPolarity = -lastPolarity;
+            signal[i+6] = -lastPolarity;
+            signal[i+7] = lastPolarity;
             i += 7;
         }
     }
 }
 
+// --- HDB3 Scrambling ---
 void scrambleHDB3(int* signal, int n) {
-    int oneCount = 0;
-    int lastPolarity = 1;
+    int lastPolarity = 1;      
+    int nonZeroCount = 0;
 
-    for (int i = 0; i <= n - 4; i++) {
+    for (int i = 0; i <= n - 4; ) {  
+        
         if (signal[i] != 0) {
             lastPolarity = signal[i];
-            oneCount++;
+            nonZeroCount++;
+            i++;
+            continue;
         }
 
+        
         bool allZero = true;
         for (int j = i; j < i + 4; j++) {
-            if (signal[j] != 0) { allZero = false; break; }
+            if (signal[j] != 0) { 
+                allZero = false; 
+                break; 
+            }
         }
 
         if (allZero) {
-            if (oneCount % 2 == 0) {
-                signal[i] = -lastPolarity;
-                signal[i+3] = lastPolarity;
+            
+            if (nonZeroCount % 2 == 0) {
+            
+                signal[i] = lastPolarity;          
+                signal[i+3] = -lastPolarity;       
             } else {
-                signal[i+3] = lastPolarity;
+            
+                signal[i+3] = -lastPolarity;       
             }
-            lastPolarity = -lastPolarity;
-            oneCount = 1;
-            i += 3;
+
+            
+            nonZeroCount = 0;
+            lastPolarity = signal[i+3];
+
+            
+            i += 4;
+        } else {
+            i++;
         }
     }
 }
+
+
 
 //MODULATION:-
 
@@ -217,94 +240,168 @@ void findLongestZeroRun(int* signal, int n) {
 }
 
 //OPENGL:-
-
-void drawText(float x, float y, const char* txt) {
+void drawText(float x, float y, const char* text) {
     glRasterPos2f(x, y);
-    for (int i = 0; txt[i] != '\0'; i++)
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, txt[i]);
+    for (int i = 0; text[i] != '\0'; i++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, text[i]);
+    }
 }
 
-void drawBoldText(float x, float y, const char* txt) {
+
+void drawBoldText(float x, float y, const char* text) {
     glRasterPos2f(x, y);
-    for (int i = 0; txt[i] != '\0'; i++)
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, txt[i]);
+    for (int i = 0; text[i] != '\0'; i++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
+    }
 }
 
-void renderDisplay() {
+
+void display() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (signalData == NULL || signalSize == 0) {
+    if (currentSignal == nullptr || signalLength == 0) {
         glFlush();
         return;
     }
 
-    float yScale = 0.35;
-    glColor3f(0.0, 0.0, 0.0);
-    drawBoldText(-0.95, 0.92, windowTitle);
+    float yScale = 0.35f;
 
+    // Title
     glColor3f(0.0, 0.0, 0.0);
-    glLineWidth(2.5);
+    drawBoldText(-0.95f, 0.92f, signalTitle);
+
+    // Axes
+    glColor3f(0.0, 0.0, 0.0);
+    glLineWidth(2.5f);
     glBegin(GL_LINES);
-        glVertex2f(-0.9, 0.0);
-        glVertex2f(0.9, 0.0);
-        glVertex2f(-0.9, -0.8);
-        glVertex2f(-0.9, 0.8);
+        glVertex2f(-0.9f, 0.0f);
+        glVertex2f(0.9f, 0.0f);
+        glVertex2f(-0.9f, -0.8f);
+        glVertex2f(-0.9f, 0.8f);
     glEnd();
 
+    // Grid lines
     glColor3f(0.7, 0.7, 0.7);
-    glLineWidth(1.0);
+    glLineWidth(1.0f);
     glBegin(GL_LINES);
-        glVertex2f(-0.9, yScale);
-        glVertex2f(0.9, yScale);
-        glVertex2f(-0.9, -yScale);
-        glVertex2f(0.9, -yScale);
+        glVertex2f(-0.9f, 1.0f * yScale);
+        glVertex2f(0.9f, 1.0f * yScale);
+        glVertex2f(-0.9f, -1.0f * yScale);
+        glVertex2f(0.9f, -1.0f * yScale);
     glEnd();
 
-    float xStep = 1.8 / signalSize;
+    // Vertical divisions
     glColor3f(0.88, 0.88, 0.88);
+    glLineWidth(0.5f);
     glBegin(GL_LINES);
-    for (int i = 0; i <= signalSize; i++) {
-        float x = -0.9 + i * xStep;
-        glVertex2f(x, -0.8);
-        glVertex2f(x, 0.8);
-    }
+        float xStep = 1.8f / signalLength;
+        for (int i = 0; i <= signalLength; i++) {
+            float x = -0.9f + i * xStep;
+            glVertex2f(x, -0.8f);
+            glVertex2f(x, 0.8f);
+        }
     glEnd();
 
+    // Y-axis labels
+    glColor3f(0.0, 0.0, 0.0);
+    drawText(-0.99f, 1.0f * yScale - 0.02f, "+1");
+    drawText(-0.97f, -0.03f, "0");
+    drawText(-0.99f, -1.0f * yScale - 0.02f, "-1");
+
+    // X-axis labels and info
+    int labelStep = 1;
+    if (isManchester) {
+        if (signalLength > 40) labelStep = 4;
+        else if (signalLength > 20) labelStep = 2;
+
+        for (int i = 0; i <= signalLength; i += labelStep) {
+            char label[10];
+            sprintf(label, "%.1f", i * 0.5);
+            float x = -0.9f + i * xStep - 0.02f;
+            drawText(x, -0.88f, label);
+        }
+
+        glColor3f(0.5, 0.0, 0.5);
+        drawText(-0.3f, -0.95f, "Bit Position (mid-transitions at 0.5, 1.5, 2.5...)");
+    } else {
+        if (signalLength > 30) labelStep = 5;
+        else if (signalLength > 15) labelStep = 2;
+
+        for (int i = 0; i <= signalLength; i += labelStep) {
+            char label[10];
+            sprintf(label, "%d", i);
+            float x = -0.9f + i * xStep - 0.015f;
+            drawText(x, -0.88f, label);
+        }
+
+        glColor3f(0.0, 0.0, 0.0);
+        drawText(-0.08f, -0.95f, "Bit Position");
+    }
+
+    // Voltage label
+    glColor3f(0.0, 0.0, 0.0);
+    drawText(-0.99f, 0.85f, "Voltage");
+
+    // Draw signal line
     glColor3f(0.0, 0.0, 1.0);
-    glLineWidth(3.0);
+    glLineWidth(3.0f);
     glBegin(GL_LINE_STRIP);
-    for (int i = 0; i < signalSize; i++) {
-        float x1 = -0.9 + i * xStep;
-        float x2 = -0.9 + (i + 1) * xStep;
-        float y = signalData[i] * yScale;
-        glVertex2f(x1, y);
-        glVertex2f(x2, y);
-        if (i < signalSize - 1) {
-            float nextY = signalData[i + 1] * yScale;
+        for (int i = 0; i < signalLength; i++) {
+            float x1 = -0.9f + i * xStep;
+            float x2 = -0.9f + (i + 1) * xStep;
+            float y = currentSignal[i] * yScale;
+
+            glVertex2f(x1, y);
             glVertex2f(x2, y);
-            glVertex2f(x2, nextY);
+
+            if (i < signalLength - 1) {
+                float nextY = currentSignal[i + 1] * yScale;
+                glVertex2f(x2, y);
+                glVertex2f(x2, nextY);
+            }
+        }
+    glEnd();
+
+    
+    glColor3f(0.6, 0.0, 0.0);
+    if (signalLength <= 25) {
+        for (int i = 0; i < signalLength; i++) {
+            float x = -0.9f + (i + 0.5f) * xStep - 0.015f;
+            float y = currentSignal[i] * yScale;
+            char valLabel[5];
+
+            if (currentSignal[i] == 1) {
+                sprintf(valLabel, "+1");
+                drawText(x, y + 0.08f, valLabel);
+            } else if (currentSignal[i] == -1) {
+                sprintf(valLabel, "-1");
+                drawText(x, y - 0.12f, valLabel);
+            } else {
+                sprintf(valLabel, "0");
+                drawText(x, y + 0.05f, valLabel);
+            }
         }
     }
-    glEnd();
 
     glFlush();
 }
 
-void initGL() {
+
+void initializeGL() {
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(-1.0, 1.0, -1.0, 1.0);
 }
 
-void showSignal(int* data, int len, const char* title, bool manchester) {
-    signalData = data;
-    signalSize = len;
-    strcpy(windowTitle, title);
+
+void showSignal(int* signal, int len, const char* title, bool manchester) {
+    currentSignal = signal;
+    signalLength = len;
+    strcpy(signalTitle, title);
     isManchester = manchester;
     glutPostRedisplay();
 }
-
 //MAIN:-
 
 int main(int argc, char** argv) {
@@ -430,9 +527,9 @@ int main(int argc, char** argv) {
     glutInitWindowPosition(50, 50);
     glutCreateWindow("Digital Signal Visualization");
 
-    initGL();
+    initializeGL();
     showSignal(encoded, encLen, title, manchesterFlag);
-    glutDisplayFunc(renderDisplay);
+    glutDisplayFunc(display);
 
     cout << "\nOpenGL window opened. Close to exit..." << endl;
     glutMainLoop();
