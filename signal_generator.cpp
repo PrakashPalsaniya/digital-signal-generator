@@ -67,75 +67,68 @@ void encodeAMI(char* bits, int* encoded, int n) {
 }
 
 //SCRAMBLING:-
+
 // --- B8ZS Scrambling ---
-void scrambleB8ZS(int* signal, int n) {
-    int lastPolarity = 1;
-    for (int i = 0; i <= n - 8; i++) {
-        if (signal[i] != 0)
-            lastPolarity = signal[i];
-
-        
-        bool allZero = true;
-        for (int j = i; j < i + 8; j++) {
-            if (signal[j] != 0) { allZero = false; break; }
+void scrambleB8ZS(char* bits, int* encoded, int n) {
+    int zeroCount = 0;
+    bool flag = true;  
+    
+    for (int i = 0; i < n; i++) {
+        if (bits[i] == '1') {
+            encoded[i] = flag ? 1 : -1;
+            zeroCount = 0;
+            flag = !flag;
+        } else {
+            encoded[i] = 0;
+            zeroCount++;
         }
-
-        if (allZero) {
-            
-            signal[i+3] = lastPolarity;
-            signal[i+4] = -lastPolarity;
-            signal[i+6] = -lastPolarity;
-            signal[i+7] = lastPolarity;
-            i += 7;
+        
+        
+        if (zeroCount == 8) {
+        
+            encoded[i-4] = flag ? -1 : 1;   
+            encoded[i-3] = flag ? 1 : -1;   
+            encoded[i-1] = flag ? 1 : -1;   
+            encoded[i] = flag ? -1 : 1;     
+            zeroCount = 0;
         }
     }
 }
 
-// --- HDB3 Scrambling ---
-void scrambleHDB3(int* signal, int n) {
-    int lastPolarity = 1;      
-    int nonZeroCount = 0;
-
-    for (int i = 0; i <= n - 4; ) {  
-        
-        if (signal[i] != 0) {
-            lastPolarity = signal[i];
-            nonZeroCount++;
-            i++;
-            continue;
+// HDB3 - 
+void scrambleHDB3(char* bits, int* encoded, int n) {
+    int zeroCount = 0;
+    bool flag = true;      
+    bool prev = false;     
+    
+    for (int i = 0; i < n; i++) {
+        if (bits[i] == '1') {
+            encoded[i] = prev ? -1 : 1;
+            zeroCount = 0;
+            flag = !flag;
+            prev = !prev;
+        } else {
+            encoded[i] = 0;
+            zeroCount++;
         }
-
         
-        bool allZero = true;
-        for (int j = i; j < i + 4; j++) {
-            if (signal[j] != 0) { 
-                allZero = false; 
-                break; 
-            }
-        }
-
-        if (allZero) {
-            
-            if (nonZeroCount % 2 == 0) {
-            
-                signal[i] = lastPolarity;          
-                signal[i+3] = -lastPolarity;       
+        
+        if (zeroCount == 4) {
+            if (flag) {
+                
+                encoded[i-3] = prev ? -1 : 1;   
+                encoded[i] = prev ? -1 : 1;     
             } else {
             
-                signal[i+3] = -lastPolarity;       
+                encoded[i] = prev ? 1 : -1;     
             }
-
-            
-            nonZeroCount = 0;
-            lastPolarity = signal[i+3];
-
-            
-            i += 4;
-        } else {
-            i++;
+            zeroCount = 0;
+            flag = true;
+            prev = (encoded[i] > 0);
         }
     }
 }
+
 
 
 
@@ -501,10 +494,12 @@ int main(int argc, char** argv) {
                 cin >> scrType;
 
                 if (scrType == 1) {
-                    scrambleB8ZS(encoded, encLen);
+                    // B8ZS
+                    scrambleB8ZS(bitStream, encoded, encLen);
                     strcpy(title, "AMI with B8ZS");
+                    
                 } else {
-                    scrambleHDB3(encoded, encLen);
+                    scrambleHDB3(bitStream, encoded, encLen);
                     strcpy(title, "AMI with HDB3");
                 }
 
